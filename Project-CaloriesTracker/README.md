@@ -1,0 +1,1 @@
+# CaloriesTracker coded in pure vanilla Javascript
