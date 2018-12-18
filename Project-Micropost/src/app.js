@@ -4,8 +4,8 @@ import { ui } from "./ui";
 // Get posts on DOM load
 document.addEventListener("DOMContentLoaded", getPosts);
 
-// Listen for POST
-ui.postSubmit.addEventListener("click", postPost);
+// Listen for form submit
+ui.postSubmit.addEventListener("click", submitForm);
 
 // Listen for DELETE
 ui.post.addEventListener("click", deletePost);
@@ -16,6 +16,7 @@ ui.post.addEventListener("click", putPost);
 // Listen for cancel
 ui.cardForm.addEventListener("click", cancelEdit);
 
+// Send GET request and show on DOM
 function getPosts() {
   http
     .get("http://localhost:3000/posts")
@@ -23,16 +24,20 @@ function getPosts() {
     .catch(err => console.log(err));
 }
 
-function postPost() {
+// POST OR PUT
+function submitForm() {
+  // Get input values
   const title = ui.titleInput.value;
   const body = ui.bodyInput.value;
   const id = ui.idInput.value;
 
+  // Input validation
   if (title === "" || body === "") {
     ui.showAlert("Please fill in all fields", "warning");
   } else {
+    // POST REQUEST
     if (ui.forState === "add") {
-      // Get input
+      // "add" is the default state
       const newPost = {
         title,
         body
@@ -43,6 +48,7 @@ function postPost() {
         .then(data => {
           ui.showAlert("Post added", "success");
           ui.clearForm();
+          // Refetch the post on DOM
           getPosts();
         })
         .catch(err => console.log(err));
@@ -57,6 +63,7 @@ function postPost() {
         .then(data => {
           ui.showAlert("Post updated", "success");
           ui.toggleFormState("add");
+          // Refetch
           getPosts();
         })
         .catch(err => console.log(err));
@@ -67,20 +74,22 @@ function postPost() {
 function deletePost(e) {
   // Delegate to the remove button
   if (e.target.parentElement.className.includes("delete")) {
-    ui.toggleFormState("add");
     // Get ID
     const id = e.target.parentElement.dataset.id;
     // Get confirmation
     if (confirm("Are you sure?")) {
+      // Send DELETE REQUEST
       http
         .delete(`http://localhost:3000/posts/${id}`)
         .then(data => {
           ui.showAlert("Post Removed", "success");
+          // Refetch
           getPosts();
         })
         .catch(err => console.log(err));
     }
   }
+  ui.toggleFormState("add");
   e.preventDefault();
 }
 
@@ -89,7 +98,7 @@ function putPost(e) {
   if (e.target.parentElement.className.includes("edit")) {
     // Get ID
     const id = e.target.parentElement.dataset.id;
-    // Get the data from backend
+    // Get the data from backend by sending GET REQUEST
     http
       .get(`http://localhost:3000/posts/${id}`)
       .then(data => {
@@ -99,8 +108,8 @@ function putPost(e) {
           title: data.title,
           body: data.body
         };
-        ui.fillForm(selectedPost);
         ui.toggleFormState("edit");
+        ui.fillForm(selectedPost);
       })
       .catch(err => console.log(err));
   }
